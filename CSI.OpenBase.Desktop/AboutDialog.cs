@@ -6,7 +6,7 @@ namespace CSI.OpenBase.Desktop;
 internal sealed class AboutDialog : Form
 {
     internal const string Author = "CSI OpenBase contributors";
-    internal const string GitHubUrl = "https://github.com/CSI-OpenBase/winform";
+    internal const string GitHubUrl = "https://github.com/Content-Structure-Index/Openbase-win";
 
     private static readonly Color TextColor = DesktopTheme.Ink;
     private static readonly Color MutedTextColor = DesktopTheme.Muted;

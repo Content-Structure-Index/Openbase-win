@@ -145,7 +145,7 @@ internal sealed class MainForm : Form
     private readonly TaskPanelControl _taskPanel;
     private readonly Label _statusLabel;
     private readonly ProgressBar _progressBar;
-    private readonly ToolStripMenuItem _browseMenuItem;
+    private readonly ToolStripMenuItem _settingsMenuItem;
     private readonly ToolStripMenuItem _tasksMenuItem;
     private readonly ToolStripMenuItem _restartMenuItem;
     private readonly System.Windows.Forms.Timer _backendMonitor;
@@ -189,13 +189,11 @@ internal sealed class MainForm : Form
             Renderer = DesktopTheme.CreateMenuRenderer(),
             ShowItemToolTips = true,
         };
-        var settingsMenu = new ToolStripMenuItem("设置");
-        _browseMenuItem = new ToolStripMenuItem("目录设置")
+        _settingsMenuItem = new ToolStripMenuItem("设置")
         {
-            AccessibleName = "设置工作目录",
+            AccessibleName = "打开设置",
         };
-        _browseMenuItem.Click += async (_, _) => await SelectWorkspaceAsync();
-        settingsMenu.DropDownItems.Add(_browseMenuItem);
+        _settingsMenuItem.Click += async (_, _) => await ShowSettingsAsync();
 
         var operationsMenu = new ToolStripMenuItem("操作");
         var logMenuItem = new ToolStripMenuItem("运行日志")
@@ -234,7 +232,7 @@ internal sealed class MainForm : Form
             using var dialog = new AboutDialog();
             dialog.ShowDialog(this);
         };
-        menuStrip.Items.AddRange([settingsMenu, operationsMenu, aboutMenuItem]);
+        menuStrip.Items.AddRange([_settingsMenuItem, operationsMenu, aboutMenuItem]);
         MainMenuStrip = menuStrip;
         UpdateWorkspaceMenuState();
 
@@ -522,7 +520,7 @@ internal sealed class MainForm : Form
                 _log.Write("desktop", $"Workspace initialization failed: {exception}");
                 ResetTaskPanel("工作目录不可用");
                 SetStatus(
-                    $"无法初始化工作目录，请通过“目录设置”更换目录：{exception.Message}",
+                    $"无法初始化工作目录，请通过“设置”更换目录：{exception.Message}",
                     isBusy: false,
                     isError: true);
                 return;
@@ -588,45 +586,49 @@ internal sealed class MainForm : Form
         }
     }
 
-    private async Task<bool> SelectWorkspaceAsync()
+    private async Task ShowSettingsAsync()
     {
-        var initialDirectory = Directory.Exists(_settings.WorkspaceDirectory)
-            ? _settings.WorkspaceDirectory
-            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        using var dialog = new FolderBrowserDialog
-        {
-            Description = "选择 CSI OpenBase 工作目录",
-            InitialDirectory = initialDirectory,
-            ShowNewFolderButton = true,
-            UseDescriptionForTitle = true,
-        };
-
+        using var dialog = new SettingsDialog(_settings.WorkspaceDirectory);
         if (dialog.ShowDialog(this) != DialogResult.OK)
         {
-            return false;
+            return;
         }
 
+        SetControlsEnabled(false);
         try
         {
-            var selectedPath = Path.GetFullPath(dialog.SelectedPath);
+            var selectedPath = Path.GetFullPath(dialog.WorkspaceDirectory);
             Directory.CreateDirectory(selectedPath);
             var writeProbe = Path.Combine(selectedPath, $".csi-write-{Guid.NewGuid():N}.tmp");
             await File.WriteAllTextAsync(writeProbe, string.Empty);
             File.Delete(writeProbe);
 
+            var previousDirectory = _settings.WorkspaceDirectory;
             _settings.WorkspaceDirectory = selectedPath;
-            _settings.Save();
+            try
+            {
+                _settings.Save();
+            }
+            catch
+            {
+                _settings.WorkspaceDirectory = previousDirectory;
+                throw;
+            }
             UpdateWorkspaceMenuState();
             _log.Write("desktop", $"Data home changed to {selectedPath}");
             await RestartBackendAsync();
-
-            return true;
         }
         catch (Exception exception)
         {
             _log.Write("desktop", $"Workspace selection failed: {exception}");
             SetStatus($"无法使用所选目录：{exception.Message}", isBusy: false, isError: true);
-            return false;
+        }
+        finally
+        {
+            if (!_closing)
+            {
+                SetControlsEnabled(true);
+            }
         }
     }
 
@@ -702,9 +704,9 @@ internal sealed class MainForm : Form
 
     private void UpdateWorkspaceMenuState()
     {
-        var description = $"当前工作目录：{_settings.WorkspaceDirectory}。点击更改目录。";
-        _browseMenuItem.AccessibleDescription = description;
-        _browseMenuItem.ToolTipText = description;
+        var description = $"当前工作目录：{_settings.WorkspaceDirectory}";
+        _settingsMenuItem.AccessibleDescription = description;
+        _settingsMenuItem.ToolTipText = description;
     }
 
     private void PrepareTaskPanelForConnection()
@@ -917,7 +919,7 @@ internal sealed class MainForm : Form
             return;
         }
 
-        _browseMenuItem.Enabled = enabled;
+        _settingsMenuItem.Enabled = enabled;
         _restartMenuItem.Enabled = enabled && _settings.HasPersistedWorkspace;
     }
 

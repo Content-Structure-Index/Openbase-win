@@ -63,7 +63,7 @@ class ReleaseContractTests(unittest.TestCase):
         )
 
         self.assertIn("CSI OpenBase contributors", source)
-        self.assertIn("https://github.com/CSI-OpenBase/winform", source)
+        self.assertIn("https://github.com/Content-Structure-Index/Openbase-win", source)
         self.assertIn("AssemblyInformationalVersionAttribute", source)
         self.assertIn("File.GetLastWriteTimeUtc", source)
         self.assertIn("BeijingTime.Convert", source)

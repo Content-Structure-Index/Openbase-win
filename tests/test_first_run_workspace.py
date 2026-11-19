@@ -10,6 +10,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MAIN_FORM_SOURCE = (
     PROJECT_ROOT / "CSI.OpenBase.Desktop" / "MainForm.cs"
 ).read_text(encoding="utf-8")
+SETTINGS_DIALOG_SOURCE = (
+    PROJECT_ROOT / "CSI.OpenBase.Desktop" / "SettingsDialog.cs"
+).read_text(encoding="utf-8")
 TASK_PANEL_SOURCE = (
     PROJECT_ROOT / "CSI.OpenBase.Desktop" / "TaskPanelControl.cs"
 ).read_text(encoding="utf-8")
@@ -28,14 +31,38 @@ class FirstRunWorkspaceContractTests(unittest.TestCase):
     def test_startup_only_opens_the_folder_picker_on_user_request(self) -> None:
         startup = MAIN_FORM_SOURCE.split(
             "private async Task InitializeAndStartAsync()", 1
-        )[1].split("private async Task<bool> SelectWorkspaceAsync()", 1)[0]
-        self.assertNotIn("SelectWorkspaceAsync(", startup)
+        )[1].split("private async Task ShowSettingsAsync()", 1)[0]
+        self.assertNotIn("ShowSettingsAsync(", startup)
         self.assertNotIn("ShowDialog(", startup)
         self.assertIn("await RestartBackendAsync();", startup)
+
+    def test_settings_shows_current_workspace_before_opening_the_picker(self) -> None:
         self.assertIn(
-            "_browseMenuItem.Click += async (_, _) => await SelectWorkspaceAsync();",
+            "_settingsMenuItem.Click += async (_, _) => await ShowSettingsAsync();",
             MAIN_FORM_SOURCE,
         )
+        self.assertIn("new SettingsDialog(_settings.WorkspaceDirectory)", MAIN_FORM_SOURCE)
+        self.assertIn("ReadOnly = true", SETTINGS_DIALOG_SOURCE)
+        self.assertIn("Text = currentDirectory", SETTINGS_DIALOG_SOURCE)
+        self.assertIn('Text = "工作目录"', SETTINGS_DIALOG_SOURCE)
+        self.assertIn("changeButton.Click +=", SETTINGS_DIALOG_SOURCE)
+        self.assertIn("if (ChooseDirectory())", SETTINGS_DIALOG_SOURCE)
+        self.assertIn("new FolderBrowserDialog", SETTINGS_DIALOG_SOURCE)
+
+    def test_only_saving_settings_applies_the_new_workspace(self) -> None:
+        settings_handler = MAIN_FORM_SOURCE.split(
+            "private async Task ShowSettingsAsync()", 1
+        )[1].split("private void SetTaskPanelVisible", 1)[0]
+        self.assertLess(
+            settings_handler.index("if (dialog.ShowDialog(this) != DialogResult.OK)"),
+            settings_handler.index("_settings.WorkspaceDirectory = selectedPath;"),
+        )
+        self.assertLess(
+            settings_handler.index("_settings.Save();"),
+            settings_handler.index("await RestartBackendAsync();"),
+        )
+        self.assertIn('CreateButton("保存", DialogResult.OK)', SETTINGS_DIALOG_SOURCE)
+        self.assertIn('CreateButton("取消", DialogResult.Cancel)', SETTINGS_DIALOG_SOURCE)
 
     def test_workspace_is_initialized_before_starting_the_backend(self) -> None:
         restart = MAIN_FORM_SOURCE.split("private async Task RestartBackendAsync()", 1)[1]
@@ -51,7 +78,7 @@ class FirstRunWorkspaceContractTests(unittest.TestCase):
 
     def test_top_controls_share_the_main_menu(self) -> None:
         self.assertIn("var menuStrip = new MenuStrip", MAIN_FORM_SOURCE)
-        self.assertIn('new ToolStripMenuItem("目录设置")', MAIN_FORM_SOURCE)
+        self.assertIn('new ToolStripMenuItem("设置")', MAIN_FORM_SOURCE)
         self.assertIn('new ToolStripMenuItem("运行日志")', MAIN_FORM_SOURCE)
         self.assertIn('new ToolStripMenuItem("任务")', MAIN_FORM_SOURCE)
         self.assertIn('new ToolStripMenuItem("关于")', MAIN_FORM_SOURCE)

@@ -22,16 +22,16 @@ The Python backend is maintained separately in
 
 ## Interface Preview
 
-These screenshots use an isolated demonstration workspace and synthetic data to
-show the local management interface embedded in the WinForms application.
+These screenshots show the Windows desktop app using an isolated demo workspace
+and synthetic data.
 
-### Local Archive Overview
+### Local Archive and Task Panel
 
-![CSI OpenBase local archive overview](.github/assets/screenshots/local-archive-overview.png)
+![CSI OpenBase local archive with recent tasks in the desktop sidebar](.github/assets/screenshots/local-archive-overview.png)
 
-### Video Archive and Comment Collection
+### Video Archive
 
-![Video archive, comment counts, and incremental export actions](.github/assets/screenshots/video-archive.png)
+![Video archive with groups, visible metrics, and archive export](.github/assets/screenshots/video-archive.png)
 
 ### Task History
 
@@ -41,7 +41,11 @@ show the local management interface embedded in the WinForms application.
 
 ![Clear platform exports, comments, or all local data by scope](.github/assets/screenshots/clear-data-dialog.png)
 
-### Settings
+### Desktop Workspace Settings
+
+![Desktop Settings dialog showing the current workspace and the Change button](.github/assets/screenshots/workspace-settings.png)
+
+### Comment Export Settings
 
 ![Configure the comment export directory](.github/assets/screenshots/settings.png)
 
@@ -52,11 +56,11 @@ directory at `CSI OpenBase` inside the user's Windows Documents folder, then
 starts the local backend without opening a folder picker. If Documents is
 unavailable, it uses `%LOCALAPPDATA%\CSI OpenBase\data`. Exported tables, video
 archives, comment data, and the local index are stored there. Existing saved
-work directories remain selected. Use **设置 → 目录设置** in the top menu to change
-the directory; cancelling the picker keeps the current selection. Switching
-directories does not move data from the previous location. If a directory
-cannot be initialized, the main window shows an error and lets the user select
-another directory.
+work directories remain selected. Open **设置** in the top menu to see the
+current work directory. To switch directories, select **更改…**, choose a folder,
+then select **保存**. Cancelling keeps the current directory, and switching does
+not move existing data. If a directory cannot be initialized, the main window
+shows an error and lets the user select another directory.
 
 The Windows shell includes an expanded-by-default, collapsible task panel beside the local web UI. It
 shows the current workspace's active count and recent task status already
@@ -66,7 +70,7 @@ Space, opens that work on the correct archive page. The panel is read-only; task
 the Python backend and local web UI. Task times, refresh times, and desktop log
 timestamps are always displayed in Beijing time (`UTC+08:00`), regardless of
 the Windows system timezone. The top menu has **设置**, **操作**, and **关于**:
-workspace selection is under **设置**, while **操作** contains runtime logs,
+**设置** opens the workspace settings dialog, while **操作** contains runtime logs,
 the task-panel toggle, and backend restart. The window title includes the
 application version from `VERSION`. The About dialog shows the
 project author, official GitHub repository, application version, and executable
