@@ -85,6 +85,18 @@ Requirements:
 - Microsoft Edge WebView2 Runtime
 - Python 3.12 or later when running the Python backend from source or a wheel
 
+To clone the desktop repository with its optional `local-web` submodule in
+`python/`, run:
+
+```powershell
+git clone --recurse-submodules git@github.com:CSI-OpenBase/winform.git
+```
+
+In an existing clone, run `git submodule update --init --recursive` after pulling
+the desktop changes. The submodule checks out the backend commit recorded by the
+desktop repository. See the [backend README](https://github.com/CSI-OpenBase/local-web#readme)
+for dependency setup.
+
 From this directory, build or run the desktop host with:
 
 ```powershell
@@ -92,14 +104,13 @@ dotnet build .\CSI.OpenBase.Desktop\CSI.OpenBase.Desktop.csproj
 dotnet run --project .\CSI.OpenBase.Desktop\CSI.OpenBase.Desktop.csproj
 ```
 
-When a separately cloned `local-web` checkout is placed in a sibling `../python`
-directory, the host walks upward only from its own application directory to
-discover `python\scripts\run_openbase.py`; it never uses
-the process's current working directory for backend discovery. It prefers the Python project's
-`.venv\Scripts\python.exe`, then `venv\Scripts\python.exe`, then `python` on
-`PATH`.
+The host supports both the `python/` submodule and a standalone checkout in
+`../python`. It walks upward from its own application directory to find
+`python\scripts\run_openbase.py`, not from the process's working directory.
+It prefers the Python project's `.venv\Scripts\python.exe`, then
+`venv\Scripts\python.exe`, then `python` on `PATH`.
 
-To run against an installed Python wheel without a sibling source tree, specify the
+To run against an installed Python wheel instead of source, specify the
 interpreter that contains `csi-openbase`:
 
 ```powershell
@@ -228,8 +239,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_windows.ps1 `
   -PythonSource ..\python -SkipArchive -SkipInstaller
 ```
 
-From a standalone `winform` checkout, clone `local-web` separately and pass its
-path with `-PythonSource`, or consume a published wheel with `-PythonWheel`.
+To build from the submodule, pass `-PythonSource .\python` explicitly. A separate
+source checkout or a published wheel is also supported.
 
 Use another source checkout explicitly:
 

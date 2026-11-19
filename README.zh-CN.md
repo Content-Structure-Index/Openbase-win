@@ -76,6 +76,16 @@ GitHub 仓库、程序版本和可执行文件更新日期。
 - Microsoft Edge WebView2 Runtime
 - 从源码或 wheel 运行 Python 后端时，需要 Python 3.12 或更高版本
 
+克隆桌面仓库并将可选的 `local-web` 子模块一并拉取到 `python/`：
+
+```powershell
+git clone --recurse-submodules git@github.com:CSI-OpenBase/winform.git
+```
+
+已有克隆在拉取桌面仓库更新后，运行 `git submodule update --init --recursive`。
+子模块会检出桌面仓库记录的后端提交。依赖安装见
+[后端 README](https://github.com/CSI-OpenBase/local-web#readme)。
+
 在本目录中构建或运行桌面宿主：
 
 ```powershell
@@ -83,12 +93,12 @@ dotnet build .\CSI.OpenBase.Desktop\CSI.OpenBase.Desktop.csproj
 dotnet run --project .\CSI.OpenBase.Desktop\CSI.OpenBase.Desktop.csproj
 ```
 
-如果独立克隆的 `local-web` 位于相邻的 `../python` 目录，宿主只会从自身应用目录向上
-查找 `python\scripts\run_openbase.py`，不会使用进程的当前工作目录来发现后端。它会
+宿主既支持 `python/` 子模块，也支持相邻 `../python` 目录中的独立克隆。宿主从自身
+应用目录向上查找 `python\scripts\run_openbase.py`，不使用进程的当前工作目录。它会
 依次尝试 Python 项目的 `.venv\Scripts\python.exe`、
 `venv\Scripts\python.exe`，最后使用 `PATH` 中的 `python`。
 
-若不使用相邻源码目录，而是运行已安装的 Python wheel，请指定安装了
+若不使用源码，而是运行已安装的 Python wheel，请指定安装了
 `csi-openbase` 的解释器：
 
 ```powershell
@@ -204,8 +214,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_windows.ps1 `
   -PythonSource ..\python -SkipArchive -SkipInstaller
 ```
 
-若 `winform` 是独立检出的仓库，请单独克隆 `local-web` 并使用 `-PythonSource` 传入
-其路径，或者使用已发布的 wheel 和 `-PythonWheel`。
+使用子模块中的源码构建时，显式传入 `-PythonSource .\python`。也可以使用独立克隆
+的源码目录或已发布的 wheel。
 
 显式指定其他源码目录：
 
